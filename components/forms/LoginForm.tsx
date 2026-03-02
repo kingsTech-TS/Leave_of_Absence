@@ -114,6 +114,31 @@ export function LoginForm() {
           <Button type="submit" className="w-full" size="lg" disabled={loading}>
             {loading ? "Signing in..." : "Sign In"}
           </Button>
+
+          <div className="relative w-full py-2">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-slate-300"></span>
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-slate-50 px-2 text-slate-500">
+                Or continue with
+              </span>
+            </div>
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full bg-white border-blue-600 text-blue-700 hover:bg-blue-50"
+            onClick={() => {
+              const coreUrl =
+                process.env.NEXT_PUBLIC_CORE_URL || "http://localhost:3000";
+              window.location.href = `${coreUrl}/login?module=leave_of_absence`;
+            }}
+          >
+            Sign in with Core Platform
+          </Button>
+
           <div className="text-xs text-slate-500 text-center">
             Demo Users: student@uni.edu, staff@uni.edu, admin@uni.edu (pwd:
             password123)
