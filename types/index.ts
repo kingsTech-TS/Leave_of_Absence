@@ -58,4 +58,6 @@ export const NON_ACADEMIC_STAFF_LEAVE_TYPES: LeaveType[] = [
   { id: "leave_without_pay", label: "Leave Without Pay" },
 ];
 
-// Note: Ensure maximum of 6 types or combined set for the 6 requested leave types if needed
+export type LoginResponse = 
+  | { success: true; role: Role }
+  | { success: false; message: string };

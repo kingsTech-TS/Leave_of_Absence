@@ -47,10 +47,10 @@ export function LoginForm() {
     const res = await loginUser(data);
     setLoading(false);
 
-    if (res.success) {
+    if (res.success && "role" in res) {
       if (res.role === "ADMIN") router.push("/admin");
       else router.push(`/${res.role?.toLowerCase()}/dashboard`);
-    } else {
+    } else if (!res.success) {
       setError(res.message);
     }
   };

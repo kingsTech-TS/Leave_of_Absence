@@ -5,8 +5,9 @@ import User from '../models/User';
 import bcrypt from 'bcryptjs';
 import { signToken } from '../auth';
 import { cookies } from 'next/headers';
+import { LoginResponse } from '@/types';
 
-export async function loginUser(data: any) {
+export async function loginUser(data: any): Promise<LoginResponse> {
   try {
     await dbConnect();
     const { email, password, role } = data;
@@ -24,9 +25,9 @@ export async function loginUser(data: any) {
           idNumber: role === 'STUDENT' ? 'STU12345' : (role === 'ADMIN' ? 'ADM12345' : 'STAFF12345'),
           department: 'Computer Science',
           faculty: 'Science',
-          role
+          role,
+          staffCategory: role === 'STAFF' ? 'ACADEMIC' : null
         };
-        if (role === 'STAFF') newUserData['staffCategory'] = 'ACADEMIC';
         const newUser = await User.create(newUserData);
         return await authenticateUser(newUser);
       }
@@ -45,7 +46,7 @@ export async function loginUser(data: any) {
   }
 }
 
-async function authenticateUser(user: any) {
+async function authenticateUser(user: any): Promise<LoginResponse> {
   const token = await signToken({ userId: user._id, role: user.role });
   const cookieStore = await cookies();
   cookieStore.set('token', token, {
