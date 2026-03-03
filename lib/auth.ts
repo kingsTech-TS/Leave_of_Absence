@@ -27,25 +27,35 @@ export async function getSession() {
     // 1. Validate against the external Core Platform first as it's the source of truth
     const CORE_URL = process.env.CORE_API_URL || "https://eksucore.vercel.app";
     const coreProfileUrl = `${CORE_URL}/api/users/me`;
-    const response = await fetch(coreProfileUrl, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
-      next: { revalidate: 60 } // cache for 1 minute to avoid excessive pings
-    });
+    
+    // Add a timeout to the fetch to prevent hanging for 10s
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-    if (response.ok) {
-      const userData = await response.json();
-      return {
-        ...userData,
-        // Ensure _id and role are present for compatibility with local code
-        _id: userData._id || userData.id,
-        role: userData.role
-      };
+    try {
+      const response = await fetch(coreProfileUrl, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        next: { revalidate: 60 },
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
+      if (response.ok) {
+        const userData = await response.json();
+        return {
+          ...userData,
+          _id: userData._id || userData.id,
+          role: userData.role
+        };
+      }
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      console.warn("External session validation failed or timed out, falling back to local.");
     }
 
-    // 2. Fallback to local database if external validation fails
-    // This supports local development and local-only users (like seeded admins)
+    // 2. Fallback to local database
     const decoded = await verifyToken(token) as { userId: string } | null;
     if (!decoded || !decoded.userId) return null;
 
