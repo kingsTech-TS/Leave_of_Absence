@@ -7,16 +7,16 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const ref = searchParams.get("ref");
 
-  if (!ref) {
-    return NextResponse.redirect(new URL("/login?error=missing_reference", request.url));
-  }
-
-  const CORE_API_URL = process.env.CORE_API_URL;
+  const CORE_API_URL = process.env.CORE_API_URL || "https://eksucore.vercel.app";
   const CORE_SYSTEM_SECRET = process.env.CORE_SYSTEM_SECRET;
+
+  if (!ref) {
+    return NextResponse.redirect(`${CORE_API_URL}/login?error=missing_reference`);
+  }
 
   if (!CORE_API_URL || !CORE_SYSTEM_SECRET) {
     console.error("Missing CORE_API_URL or CORE_SYSTEM_SECRET environment variables.");
-    return NextResponse.redirect(new URL("/login?error=system_config_error", request.url));
+    return NextResponse.redirect(`https://eksucore.vercel.app/login?error=system_config_error`);
   }
 
   try {
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
         console.error("Verification failed:", errData);
-      return NextResponse.redirect(new URL("/login?error=verification_failed", request.url));
+      return NextResponse.redirect(`${CORE_API_URL}/login?error=verification_failed`);
     }
 
     const { user, token } = await response.json();
@@ -77,6 +77,6 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error("Callback error:", error);
-    return NextResponse.redirect(new URL("/login?error=server_error", request.url));
+    return NextResponse.redirect(`${CORE_API_URL}/login?error=server_error`);
   }
 }

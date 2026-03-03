@@ -10,7 +10,8 @@ export default async function StaffLayout({
   const session = await getSession();
 
   if (!session || session.role !== "STAFF") {
-    redirect("/login");
+    const CORE_URL = process.env.CORE_API_URL || "https://eksucore.vercel.app";
+    redirect(`${CORE_URL}/login?module=leave_of_absence`);
   }
 
   return (
