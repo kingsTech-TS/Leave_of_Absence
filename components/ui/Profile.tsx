@@ -62,7 +62,7 @@ export default function Profile({ user }: ProfileProps) {
                 <div className="flex items-center space-x-2">
                   <MapPin className="h-4 w-4 text-blue-500" />
                   <p className="text-slate-900 font-medium">
-                    {user.faculty || "University"}
+                    {user.faculty || "Not Specified"}
                   </p>
                 </div>
               </div>
@@ -73,7 +73,7 @@ export default function Profile({ user }: ProfileProps) {
                 <div className="flex items-center space-x-2">
                   <Building className="h-4 w-4 text-blue-500" />
                   <p className="text-slate-900 font-medium">
-                    {user.department || "Academic"}
+                    {user.department || "Not Specified"}
                   </p>
                 </div>
               </div>
@@ -96,7 +96,7 @@ export default function Profile({ user }: ProfileProps) {
                   <div className="flex items-center space-x-2">
                     <Briefcase className="h-4 w-4 text-emerald-500" />
                     <p className="text-slate-900 font-medium">
-                      {user.staffCategory || "N/A"}
+                      {user.staffCategory || "Not Specified"}
                     </p>
                   </div>
                 </div>

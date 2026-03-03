@@ -37,22 +37,31 @@ export async function getSession() {
         headers: {
           'Authorization': `Bearer ${token}`
         },
-        next: { revalidate: 60 },
+        cache: 'no-store', // Always fresh "at the moment"
         signal: controller.signal
       });
       clearTimeout(timeoutId);
 
       if (response.ok) {
-        const userData = await response.json();
+        const data = await response.json();
+        // Handle both direct objects and { user: ... } nesting
+        const userData = data.user || data;
+        
         return {
           ...userData,
           _id: userData._id || userData.id,
-          role: userData.role
+          idNumber: userData.idNumber || userData.registrationNumber || userData.matricNo,
+          role: userData.role,
+          name: userData.name,
+          email: userData.email,
+          department: userData.department,
+          faculty: userData.faculty,
+          staffCategory: userData.staffCategory
         };
       }
     } catch (fetchError) {
       clearTimeout(timeoutId);
-      console.warn("External session validation failed or timed out, falling back to local.");
+      console.warn("External session validation failed or timed out.");
     }
 
     // 2. Fallback to local database
