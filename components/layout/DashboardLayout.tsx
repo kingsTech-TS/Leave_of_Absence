@@ -39,8 +39,10 @@ export function Sidebar({ role }: SidebarProps) {
   ];
 
   if (role === "OFFICIAL") {
+    links[0].name = "Official Dashboard";
     links[0].href = "/official";
-    links[1].href = "/official/all-leaves"; // Example
+    // For officials, "Leave History" usually means "All applications" which is the dashboard
+    links.splice(1, 1);
   }
 
   return (
