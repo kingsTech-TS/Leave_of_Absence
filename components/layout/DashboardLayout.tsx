@@ -34,7 +34,7 @@ export function Sidebar({ role }: SidebarProps) {
       href: `/${role.toLowerCase()}/history`,
       icon: History,
     },
-    { name: "Profile", href: "#", icon: User },
+    { name: "Profile", href: `/${role.toLowerCase()}/profile`, icon: User },
     { name: "Settings", href: "#", icon: Settings },
   ];
 
