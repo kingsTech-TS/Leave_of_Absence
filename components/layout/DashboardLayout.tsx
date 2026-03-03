@@ -17,7 +17,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 interface SidebarProps {
-  role: "STUDENT" | "STAFF" | "ADMIN";
+  role: "STUDENT" | "STAFF" | "OFFICIAL";
 }
 
 export function Sidebar({ role }: SidebarProps) {
@@ -38,9 +38,9 @@ export function Sidebar({ role }: SidebarProps) {
     { name: "Settings", href: "#", icon: Settings },
   ];
 
-  if (role === "ADMIN") {
-    links[0].href = "/admin";
-    links[1].href = "/admin/all-leaves"; // Example
+  if (role === "OFFICIAL") {
+    links[0].href = "/official";
+    links[1].href = "/official/all-leaves"; // Example
   }
 
   return (

@@ -44,7 +44,7 @@ export async function getUserLeaves() {
 export async function getAllLeaves() {
   try {
     const session = await getSession();
-    if (!session || session.role !== 'ADMIN') return { success: false, message: 'Unauthorized' };
+    if (!session || session.role !== 'OFFICIAL') return { success: false, message: 'Unauthorized' };
 
     await dbConnect();
     const leaves = await LeaveApplication.find().populate('userId', 'name idNumber department faculty').sort({ createdAt: -1 }).lean();
@@ -57,11 +57,11 @@ export async function getAllLeaves() {
 export async function updateLeaveStatus(leaveId: string, status: string) {
   try {
     const session = await getSession();
-    if (!session || session.role !== 'ADMIN') return { success: false, message: 'Unauthorized' };
+    if (!session || session.role !== 'OFFICIAL') return { success: false, message: 'Unauthorized' };
 
     await dbConnect();
     await LeaveApplication.findByIdAndUpdate(leaveId, { status });
-    revalidatePath('/admin');
+    revalidatePath('/official');
     return { success: true, message: 'Status updated' };
   } catch (error: any) {
     return { success: false, message: error.message };

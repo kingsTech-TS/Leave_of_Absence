@@ -22,7 +22,7 @@ import { loginUser } from "@/lib/actions/auth";
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  role: z.enum(["STAFF", "STUDENT", "ADMIN"]),
+  role: z.enum(["STAFF", "STUDENT", "OFFICIAL"]),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -48,7 +48,7 @@ export function LoginForm() {
     setLoading(false);
 
     if (res.success && "role" in res) {
-      if (res.role === "ADMIN") router.push("/admin");
+      if (res.role === "OFFICIAL") router.push("/official");
       else router.push(`/${res.role?.toLowerCase()}/dashboard`);
     } else if (!res.success) {
       setError(res.message);
@@ -82,7 +82,7 @@ export function LoginForm() {
             >
               <option value="STUDENT">Student</option>
               <option value="STAFF">Staff</option>
-              <option value="ADMIN">Administrator</option>
+              <option value="OFFICIAL">Official</option>
             </Select>
             {errors.role && (
               <p className="text-xs text-red-500">{errors.role.message}</p>

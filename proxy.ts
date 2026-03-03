@@ -24,7 +24,7 @@ export async function proxy(request: NextRequest) {
   const isProtectedPath =
     pathname.startsWith('/student') ||
     pathname.startsWith('/staff') ||
-    pathname.startsWith('/admin');
+    pathname.startsWith('/official');
 
   if (!isProtectedPath) {
     return NextResponse.next();
@@ -44,7 +44,7 @@ export async function proxy(request: NextRequest) {
     const role = (payload as any).role;
 
     // ROLE GUARD
-    if (pathname.startsWith('/admin') && role !== 'ADMIN') {
+    if (pathname.startsWith('/official') && role !== 'OFFICIAL') {
       return NextResponse.redirect(new URL('/login?error=unauthorized', request.url));
     }
     if (pathname.startsWith('/student') && role !== 'STUDENT') {

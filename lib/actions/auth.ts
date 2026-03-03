@@ -15,16 +15,16 @@ export async function loginUser(data: any): Promise<LoginResponse> {
     const user = await User.findOne({ email, role });
 
     if (!user) {
-      if (email === 'student@uni.edu' || email === 'staff@uni.edu' || email === 'admin@uni.edu') {
+      if (email === 'student@uni.edu' || email === 'staff@uni.edu' || email === 'official@uni.edu') {
         // Auto-seed dummy user for easy testing
         const hashedPassword = await bcrypt.hash('password123', 10);
         const newUserData = {
           email,
           password: hashedPassword,
-          name: role === 'STUDENT' ? 'John Doe' : (role === 'ADMIN' ? 'Admin Super' : 'Dr. Jane Smith'),
-          idNumber: role === 'STUDENT' ? 'STU12345' : (role === 'ADMIN' ? 'ADM12345' : 'STAFF12345'),
-          department: 'Computer Science',
-          faculty: 'Science',
+          name: role === 'STUDENT' ? 'John Doe' : (role === 'OFFICIAL' ? 'Official User' : 'Dr. Jane Smith'),
+          idNumber: role === 'STUDENT' ? 'STU12345' : (role === 'OFFICIAL' ? 'OFF12345' : 'STAFF12345'),
+          department: 'Academic Registry',
+          faculty: 'Administration',
           role,
           staffCategory: role === 'STAFF' ? 'ACADEMIC' : null
         };

@@ -1,4 +1,4 @@
-export type Role = "STAFF" | "STUDENT" | "ADMIN";
+export type Role = "STAFF" | "STUDENT" | "OFFICIAL";
 export type StaffCategory = "ACADEMIC" | "NON_ACADEMIC" | null;
 
 export interface User {

@@ -9,7 +9,7 @@ const UserSchema = new mongoose.Schema(
     password: { type: String, required: true },
     department: { type: String, required: true },
     faculty: { type: String, required: true },
-    role: { type: String, enum: ['STAFF', 'STUDENT', 'ADMIN'], required: true },
+    role: { type: String, enum: ['STAFF', 'STUDENT', 'OFFICIAL'], required: true },
     staffCategory: { type: String, enum: ['ACADEMIC', 'NON_ACADEMIC', null], default: null },
   },
   { timestamps: true }

@@ -70,8 +70,8 @@ export async function GET(request: NextRequest) {
 
     // Redirect based on role
     const rolePath = user.role.toLowerCase();
-    if (user.role === "ADMIN") {
-        return NextResponse.redirect(new URL("/admin", request.url));
+    if (user.role === "OFFICIAL") {
+        return NextResponse.redirect(new URL("/official", request.url));
     }
     return NextResponse.redirect(new URL(`/${rolePath}/dashboard`, request.url));
 

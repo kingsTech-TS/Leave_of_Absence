@@ -17,7 +17,7 @@ import { format } from "date-fns";
 import { Check, X, Search, Filter } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 
-export default function AdminDashboardClient() {
+export default function OfficialDashboardClient() {
   const [leaves, setLeaves] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
@@ -51,7 +51,7 @@ export default function AdminDashboardClient() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">
-            Admin Management
+            Official Management
           </h1>
           <p className="text-slate-500">
             Review and manage all employee/student leave applications.
