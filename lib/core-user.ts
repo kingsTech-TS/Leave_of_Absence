@@ -17,10 +17,10 @@ export interface CoreUser {
 
 export async function getCoreUser(): Promise<CoreUser | null> {
   const cookieStore = await cookies();
-  const token = cookieStore.get("auth_token")?.value;
+  const token = cookieStore.get("token")?.value;
 
   if (!token) {
-    console.log("[getCoreUser] No auth_token found in cookies");
+    console.log("[getCoreUser] No 'token' found in cookies");
     return null;
   }
 

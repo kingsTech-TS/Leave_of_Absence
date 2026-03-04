@@ -52,11 +52,11 @@ export async function GET(request: NextRequest) {
     // Build the absolute URL for redirect
     const dashboardUrl = new URL(normalizedRole === "OFFICIAL" ? "/official" : `/${rolePath}/dashboard`, request.url);
 
-    console.log(`[Callback] Setting auth_token cookie and redirecting to: ${dashboardUrl.toString()}`);
+    console.log(`[Callback] Setting token cookie and redirecting to: ${dashboardUrl.toString()}`);
 
     // Set cookie using next/headers (for server context)
     const cookieStore = await cookies();
-    cookieStore.set("auth_token", token, {
+    cookieStore.set("token", token, {
       httpOnly: true,
       secure: true, // Force secure for Vercel
       maxAge: 60 * 60 * 24,
@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
 
     // Also set it on the response for immediate effect in some environments
     const redirectResponse = NextResponse.redirect(dashboardUrl);
-    redirectResponse.cookies.set("auth_token", token, {
+    redirectResponse.cookies.set("token", token, {
       httpOnly: true,
       secure: true,
       maxAge: 60 * 60 * 24,

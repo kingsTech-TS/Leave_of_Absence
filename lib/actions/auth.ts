@@ -19,7 +19,7 @@ export async function loginUser(data: any): Promise<LoginResponse> {
 
 export async function logoutUser() {
   const cookieStore = await cookies();
-  cookieStore.delete('auth_token');
-  cookieStore.delete('token'); // Cleanup old token if exists
+  cookieStore.delete('token');
+  cookieStore.delete('auth_token'); // Cleanup legacy name if present
   return { success: true };
 }
