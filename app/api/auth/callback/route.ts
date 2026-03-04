@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const response = await fetch(`${CORE_API_URL}/api/verify-session`, {
+    const verificationResponse = await fetch(`${CORE_API_URL}/api/verify-session`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -29,15 +29,13 @@ export async function GET(request: NextRequest) {
       }),
     });
 
-    if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      console.error("Verification failed:", errData);
+    if (!verificationResponse.ok) {
+      const errData = await verificationResponse.json().catch(() => ({}));
+      console.error("[Callback] Verification failed:", errData);
       return NextResponse.redirect(`${CORE_API_URL}/login?error=verification_failed`);
     }
 
-    const responseData = await response.json();
-    console.log("[Callback] Verification response received:", !!responseData.token ? "Token present" : "Token MISSING");
-    
+    const responseData = await verificationResponse.json();
     const { user, token } = responseData;
 
     if (!token) {
@@ -45,9 +43,24 @@ export async function GET(request: NextRequest) {
         return NextResponse.redirect(`${CORE_API_URL}/login?error=no_token_from_core`);
     }
 
-    // Set the auth_token cookie
-    const cookieStore = await cookies();
-    cookieStore.set("auth_token", token, {
+    // Redirect based on role
+    const normalizedRole = user.role?.toUpperCase();
+    const rolePath = normalizedRole.toLowerCase();
+    
+    let dashboardUrl: URL;
+    if (normalizedRole === "OFFICIAL") {
+        dashboardUrl = new URL("/official", request.url);
+    } else {
+        dashboardUrl = new URL(`/${rolePath}/dashboard`, request.url);
+    }
+
+    console.log(`[Callback] Verification OK. Role: ${normalizedRole}. Setting auth_token and redirecting to: ${dashboardUrl.toString()}`);
+
+    // Create redirect response
+    const redirectResponse = NextResponse.redirect(dashboardUrl);
+    
+    // Set the auth_token cookie on the response object
+    redirectResponse.cookies.set("auth_token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       maxAge: 60 * 60 * 24, // 1 day
@@ -55,21 +68,10 @@ export async function GET(request: NextRequest) {
       sameSite: "lax",
     });
 
-    console.log(`[Callback] Cookie set, user role: ${user.role}. Redirecting...`);
-
-    // Redirect based on role
-    const rolePath = user.role.toLowerCase();
-    
-    if (user.role === "OFFICIAL") {
-        return NextResponse.redirect(new URL("/official", request.url));
-    }
-    
-    const dashboardUrl = new URL(`/${rolePath}/dashboard`, request.url);
-    console.log(`[Callback] Final redirect to: ${dashboardUrl.toString()}`);
-    return NextResponse.redirect(dashboardUrl);
+    return redirectResponse;
 
   } catch (error) {
-    console.error("Callback error:", error);
+    console.error("[Callback] Server error:", error);
     return NextResponse.redirect(`${CORE_API_URL}/login?error=server_error`);
   }
 }

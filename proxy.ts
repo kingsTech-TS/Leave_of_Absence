@@ -2,10 +2,14 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export async function proxy(request: NextRequest) {
+  const allCookies = request.cookies.getAll();
+  const cookieNames = allCookies.map(c => c.name).join(', ');
   const token = request.cookies.get('auth_token')?.value;
   const { pathname } = request.nextUrl;
 
   const CORE_URL = process.env.CORE_API_URL || "https://eksucore.vercel.app";
+
+  console.log(`[Proxy] Request: ${pathname} | Cookies found: ${cookieNames || 'none'}`);
 
   // 1. PUBLIC ASSETS & UTILITIES
   if (
@@ -24,7 +28,7 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith('/official');
 
   if (isProtectedPath && !token) {
-    console.log(`[Proxy] Redirecting from ${pathname} to login: No auth_token`);
+    console.log(`[Proxy] AUTH REQUIRED: Redirecting from ${pathname} to login. Cookie 'auth_token' missing.`);
     const loginUrl = `${CORE_URL}/login?module=leave_of_absence&redirect=${encodeURIComponent(request.url)}`;
     return NextResponse.redirect(loginUrl);
   }
@@ -32,7 +36,7 @@ export async function proxy(request: NextRequest) {
   // 3. ROOT PATH REDIRECTION
   if (pathname === '/') {
     if (!token) {
-      console.log(`[Proxy] Root path: Redirecting to login`);
+      console.log(`[Proxy] ROOT: No 'auth_token' cookie. Redirecting to Core login.`);
       return NextResponse.redirect(`${CORE_URL}/login?module=leave_of_absence`);
     }
   }
