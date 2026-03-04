@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { StaffCategory } from "@/types";
 
 export interface CoreUser {
   id: string;
@@ -11,6 +12,7 @@ export interface CoreUser {
   matricNumber?: string;
   staffId?: string;
   idNumber?: string;
+  staffCategory?: StaffCategory;
 }
 
 export async function getCoreUser(): Promise<CoreUser | null> {
