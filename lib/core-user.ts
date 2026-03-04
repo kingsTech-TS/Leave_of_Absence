@@ -15,6 +15,22 @@ export interface CoreUser {
   staffCategory?: StaffCategory;
 }
 
+export function decodeJWT(token: string) {
+  try {
+    const payloadBase64 = token.split(".")[1];
+    if (!payloadBase64) return null;
+    
+    // Node.js safe base64 decoding
+    const decoded = JSON.parse(
+      Buffer.from(payloadBase64, "base64").toString("utf-8")
+    );
+    return decoded;
+  } catch (error) {
+    console.error("[decodeJWT] Error decoding token:", error);
+    return null;
+  }
+}
+
 export async function getCoreUser(): Promise<CoreUser | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
@@ -24,8 +40,13 @@ export async function getCoreUser(): Promise<CoreUser | null> {
     return null;
   }
 
+  // 1. First, try to get user data from the token itself for speed/availability
+  const decoded = decodeJWT(token);
+  let userData = decoded?.user || decoded;
+
   const CORE_API_URL = process.env.CORE_API_URL || "https://eksucore.vercel.app";
 
+  // 2. Then, validate against the server and get fresh data
   try {
     const response = await fetch(`${CORE_API_URL}/api/users/me`, {
       method: "GET",
@@ -35,24 +56,27 @@ export async function getCoreUser(): Promise<CoreUser | null> {
       cache: "no-store",
     });
 
-    if (!response.ok) {
-      console.log(`[getCoreUser] Core check failed: ${response.status} ${response.statusText}`);
-      return null;
+    if (response.ok) {
+      const serverData = await response.json();
+      userData = serverData.user || serverData;
+      console.log("[getCoreUser] Fresh user data fetched successfully");
+    } else {
+      console.warn(`[getCoreUser] Server check non-OK: ${response.status}. Using decoded data if any.`);
+      if (!userData) return null;
     }
-
-    const data = await response.json();
-    console.log("[getCoreUser] User data fetched successfully:", data.user?.email || data.email);
-    const user = data.user || data;
-    const coreId = user.id || user._id;
-
-    return {
-      ...user,
-      id: coreId,
-      _id: coreId,
-      idNumber: user.matricNumber || user.staffId || user.idNumber || user.matricNo,
-    };
   } catch (error) {
-    console.error("[getCoreUser] Error fetching core user:", error);
-    return null;
+    console.error("[getCoreUser] Network error fetching fresh data. Using decoded data if any.");
+    if (!userData) return null;
   }
+
+  const coreId = userData.id || userData._id;
+  const idNumber = userData.matricNumber || userData.staffId || userData.idNumber || userData.matricNo || userData.registrationNumber;
+
+  return {
+    ...userData,
+    id: coreId,
+    _id: coreId,
+    idNumber: idNumber,
+    role: userData.role?.toUpperCase(),
+  };
 }
