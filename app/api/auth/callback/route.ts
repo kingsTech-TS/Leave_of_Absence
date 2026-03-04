@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { decodeJWT } from "@/lib/core-user";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -56,63 +57,57 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log(
-      `[Callback] Token received. Length: ${token.length}. First 10: ${token.substring(
-        0,
-        10
-      )}...`
-    );
+    // 🔹 Decode JWT to get user details (using shared utility)
+    const decodedPayload = decodeJWT(token);
+    if (!decodedPayload) {
+      console.error("[Callback] Could not decode token.");
+      return NextResponse.redirect(`${CORE_API_URL}/login?error=decode_error`);
+    }
 
-    // 🔹 OPTION 3 — Manual JWT Decode
-    const payloadBase64 = token.split(".")[1];
+    console.log("[Callback] Decoded User Payload:", decodedPayload);
 
-    // Convert base64url → base64
-    const base64 = payloadBase64
-      .replace(/-/g, "+")
-      .replace(/_/g, "/");
-
-    const decodedPayload = JSON.parse(
-      Buffer.from(base64, "base64").toString("utf-8")
-    );
-
-    console.log("[Callback] Decoded JWT Payload:", decodedPayload);
-
-    const role = decodedPayload.role?.toUpperCase() || "STUDENT";
+    const userObj = decodedPayload.user || decodedPayload;
+    const role = (userObj.role || "STUDENT").toUpperCase();
     const rolePath = role.toLowerCase();
 
-    // 🔹 Determine dashboard redirect
-    const dashboardUrl = new URL(
-      role === "ADMIN"
-        ? "/admin"
-        : `/${rolePath}/dashboard`,
-      request.url
-    );
+    // 🔹 Determine dashboard redirect (Matching RootPage logic)
+    let dashboardPath = `/${rolePath}/dashboard`;
+    if (role === "OFFICIAL") {
+      dashboardPath = "/official";
+    } else if (role === "ADMIN") {
+      dashboardPath = "/admin";
+    }
 
-    console.log(
-      `[Callback] Redirecting user (${role}) to: ${dashboardUrl.toString()}`
-    );
+    const dashboardUrl = new URL(dashboardPath, request.url);
+    const isSecure = request.nextUrl.protocol === "https:";
 
-    // 🔹 Set cookie using next/headers (for server context)
-    const cookieStore = await cookies();
-    cookieStore.set("token", token, {
-      httpOnly: true,
-      secure: true,
-      maxAge: 60 * 60 * 24,
-      path: "/",
-      sameSite: "lax",
-    });
+    console.log(`[Callback] Redirecting ${role} to: ${dashboardUrl.toString()}`);
 
     // 🔹 Create redirect response
     const redirectResponse = NextResponse.redirect(dashboardUrl);
 
-    // 🔹 Also set it on the response for immediate effect
+    // 🔹 Set secure HTTP-only cookie on the response
     redirectResponse.cookies.set("token", token, {
       httpOnly: true,
-      secure: true,
-      maxAge: 60 * 60 * 24,
+      secure: isSecure,
+      maxAge: 60 * 60 * 24, // 1 day
       path: "/",
       sameSite: "lax",
     });
+
+    // Also try setting it via the cookies() API for immediate server-side visibility if possible
+    try {
+        const cookieStore = await cookies();
+        cookieStore.set("token", token, {
+          httpOnly: true,
+          secure: isSecure,
+          maxAge: 60 * 60 * 24,
+          path: "/",
+          sameSite: "lax",
+        });
+    } catch (e) {
+        // Fallback for environments where cookies() might not be writable in this context
+    }
 
     return redirectResponse;
   } catch (error) {
