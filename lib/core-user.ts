@@ -19,7 +19,10 @@ export async function getCoreUser(): Promise<CoreUser | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get("auth_token")?.value;
 
-  if (!token) return null;
+  if (!token) {
+    console.log("[getCoreUser] No auth_token found in cookies");
+    return null;
+  }
 
   const CORE_API_URL = process.env.CORE_API_URL || "https://eksucore.vercel.app";
 
@@ -33,10 +36,12 @@ export async function getCoreUser(): Promise<CoreUser | null> {
     });
 
     if (!response.ok) {
+      console.log(`[getCoreUser] Core check failed: ${response.status} ${response.statusText}`);
       return null;
     }
 
     const data = await response.json();
+    console.log("[getCoreUser] User data fetched successfully:", data.user?.email || data.email);
     const user = data.user || data;
     const coreId = user.id || user._id;
 
@@ -47,7 +52,7 @@ export async function getCoreUser(): Promise<CoreUser | null> {
       idNumber: user.matricNumber || user.staffId || user.idNumber || user.matricNo,
     };
   } catch (error) {
-    console.error("Error fetching core user:", error);
+    console.error("[getCoreUser] Error fetching core user:", error);
     return null;
   }
 }

@@ -35,7 +35,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(`${CORE_API_URL}/login?error=verification_failed`);
     }
 
-    const { user, token } = await response.json();
+    const responseData = await response.json();
+    console.log("[Callback] Verification response received:", !!responseData.token ? "Token present" : "Token MISSING");
+    
+    const { user, token } = responseData;
+
+    if (!token) {
+        console.error("[Callback] No token returned from verification");
+        return NextResponse.redirect(`${CORE_API_URL}/login?error=no_token_from_core`);
+    }
 
     // Set the auth_token cookie
     const cookieStore = await cookies();
@@ -47,15 +55,18 @@ export async function GET(request: NextRequest) {
       sameSite: "lax",
     });
 
+    console.log(`[Callback] Cookie set, user role: ${user.role}. Redirecting...`);
+
     // Redirect based on role
     const rolePath = user.role.toLowerCase();
     
-    // Core users usually have roles like STUDENT, STAFF, OFFICIAL
     if (user.role === "OFFICIAL") {
         return NextResponse.redirect(new URL("/official", request.url));
     }
     
-    return NextResponse.redirect(new URL(`/${rolePath}/dashboard`, request.url));
+    const dashboardUrl = new URL(`/${rolePath}/dashboard`, request.url);
+    console.log(`[Callback] Final redirect to: ${dashboardUrl.toString()}`);
+    return NextResponse.redirect(dashboardUrl);
 
   } catch (error) {
     console.error("Callback error:", error);
