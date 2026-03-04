@@ -19,10 +19,13 @@ export function decodeJWT(token: string) {
   try {
     const payloadBase64 = token.split(".")[1];
     if (!payloadBase64) return null;
-    
+
+    // Convert base64url → base64 for decoding
+    const base64 = payloadBase64.replace(/-/g, "+").replace(/_/g, "/");
+
     // Node.js safe base64 decoding
     const decoded = JSON.parse(
-      Buffer.from(payloadBase64, "base64").toString("utf-8")
+      Buffer.from(base64, "base64").toString("utf-8")
     );
     return decoded;
   } catch (error) {
@@ -31,25 +34,29 @@ export function decodeJWT(token: string) {
   }
 }
 
-export async function getCoreUser(): Promise<CoreUser | null> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("token")?.value;
+export async function getCoreUser(providedToken?: string): Promise<CoreUser | null> {
+  let token = providedToken;
+  if (!token) {
+    const cookieStore = await cookies();
+    token = cookieStore.get("token")?.value;
+  }
 
   if (!token) {
-    console.log("[getCoreUser] No 'token' cookie found");
+    console.log("[getCoreUser] No 'token' found");
     return null;
   }
+  
+  const userDataPayload = decodeJWT(token);
+  if (!userDataPayload) return null;
 
-  // Rely solely on the decoded JWT payload as requested
-  const decoded = decodeJWT(token);
-  if (!decoded) {
-    console.warn("[getCoreUser] Could not decode JWT token");
-    return null;
-  }
-
-  const userData = decoded.user || decoded;
+  const userData = userDataPayload.user || userDataPayload;
   const coreId = userData.id || userData._id;
-  const idNumber = userData.matricNumber || userData.staffId || userData.idNumber || userData.matricNo || userData.registrationNumber;
+  const idNumber =
+    userData.matricNumber ||
+    userData.staffId ||
+    userData.idNumber ||
+    userData.matricNo ||
+    userData.registrationNumber;
 
   return {
     ...userData,

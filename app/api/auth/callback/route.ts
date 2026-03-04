@@ -92,14 +92,24 @@ export async function GET(request: NextRequest) {
       `[Callback] Redirecting user (${role}) to: ${dashboardUrl.toString()}`
     );
 
+    // 🔹 Set cookie using next/headers (for server context)
+    const cookieStore = await cookies();
+    cookieStore.set("token", token, {
+      httpOnly: true,
+      secure: true,
+      maxAge: 60 * 60 * 24,
+      path: "/",
+      sameSite: "lax",
+    });
+
     // 🔹 Create redirect response
     const redirectResponse = NextResponse.redirect(dashboardUrl);
 
-    // 🔹 Set secure HTTP-only cookie
+    // 🔹 Also set it on the response for immediate effect
     redirectResponse.cookies.set("token", token, {
       httpOnly: true,
-      secure: true, // Required for Vercel HTTPS
-      maxAge: 60 * 60 * 24, // 1 day
+      secure: true,
+      maxAge: 60 * 60 * 24,
       path: "/",
       sameSite: "lax",
     });

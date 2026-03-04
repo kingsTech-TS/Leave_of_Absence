@@ -4,10 +4,13 @@ import dbConnect from '../mongodb';
 import LeaveApplication from '../models/LeaveApplication';
 import { getCoreUser } from '../core-user';
 import { revalidatePath } from 'next/cache';
+import { cookies } from 'next/headers';
 
 export async function submitLeave(data: any) {
   try {
-    const user = await getCoreUser();
+    const cookieStore = await cookies();
+    const token = cookieStore.get('token')?.value;
+    const user = token ? await getCoreUser(token) : null;
     if (!user) {
       return { success: false, message: 'Unauthorized' };
     }
@@ -33,7 +36,9 @@ export async function submitLeave(data: any) {
 
 export async function getUserLeaves() {
   try {
-    const user = await getCoreUser();
+    const cookieStore = await cookies();
+    const token = cookieStore.get('token')?.value;
+    const user = token ? await getCoreUser(token) : null;
     if (!user) return { success: false, message: 'Unauthorized' };
 
     await dbConnect();
@@ -46,7 +51,9 @@ export async function getUserLeaves() {
 
 export async function getAllLeaves() {
   try {
-    const user = await getCoreUser();
+    const cookieStore = await cookies();
+    const token = cookieStore.get('token')?.value;
+    const user = token ? await getCoreUser(token) : null;
     if (!user || user.role !== 'OFFICIAL') return { success: false, message: 'Unauthorized' };
 
     await dbConnect();
@@ -59,7 +66,9 @@ export async function getAllLeaves() {
 
 export async function updateLeaveStatus(leaveId: string, status: string) {
   try {
-    const user = await getCoreUser();
+    const cookieStore = await cookies();
+    const token = cookieStore.get('token')?.value;
+    const user = token ? await getCoreUser(token) : null;
     if (!user || user.role !== 'OFFICIAL') return { success: false, message: 'Unauthorized' };
 
     await dbConnect();

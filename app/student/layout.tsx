@@ -1,13 +1,16 @@
 import { Sidebar, Navbar } from "@/components/layout/DashboardLayout";
 import { getCoreUser } from "@/lib/core-user";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 
 export default async function StudentLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getCoreUser();
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
+  const session = token ? await getCoreUser(token) : null;
 
   if (!session || session.role !== "STUDENT") {
     const CORE_URL = process.env.CORE_API_URL || "https://eksucore.vercel.app";

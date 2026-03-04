@@ -3,6 +3,7 @@ import { LeaveForm } from "@/components/forms/LeaveForm";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { getUserLeaves } from "@/lib/actions/leave";
 import { Badge } from "@/components/ui/Badge";
+import { cookies } from "next/headers";
 import {
   Table,
   TableBody,
@@ -16,7 +17,9 @@ import { FileText, Plus, Clock, CheckCircle, XCircle } from "lucide-react";
 import Link from "next/link";
 
 export default async function StudentDashboard() {
-  const session = await getCoreUser();
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
+  const session = token ? await getCoreUser(token) : null;
   if (!session || session.role !== "STUDENT") {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">

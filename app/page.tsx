@@ -1,9 +1,12 @@
 import { getCoreUser } from "@/lib/core-user";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 
 export default async function RootPage() {
   console.log("[RootPage] Checking core session...");
-  const user = await getCoreUser();
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
+  const user = token ? await getCoreUser(token) : null;
 
   if (user) {
     console.log(

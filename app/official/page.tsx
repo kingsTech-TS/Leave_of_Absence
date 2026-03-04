@@ -1,10 +1,13 @@
 import OfficialDashboardClient from "@/components/ui/OfficialDashboard";
 import { getCoreUser } from "@/lib/core-user";
 import { Badge } from "@/components/ui/Badge";
+import { cookies } from "next/headers";
 import Link from "next/link";
 
 export default async function OfficialPage() {
-  const session = await getCoreUser();
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
+  const session = token ? await getCoreUser(token) : null;
   if (!session || session.role !== "OFFICIAL") {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
