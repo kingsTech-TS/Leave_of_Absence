@@ -2,25 +2,28 @@
 
 import dbConnect from '../mongodb';
 import LeaveApplication from '../models/LeaveApplication';
-import { getSession } from '../auth';
+import { getCoreUser } from '../core-user';
 import { revalidatePath } from 'next/cache';
 
 export async function submitLeave(data: any) {
   try {
-    const session = await getSession();
-    if (!session) {
+    const user = await getCoreUser();
+    if (!user) {
       return { success: false, message: 'Unauthorized' };
     }
 
     await dbConnect();
     
     const newLeave = await LeaveApplication.create({
-      userId: session._id,
+      userId: user.id || user._id,
+      applicantName: user.name,
+      applicantIdNumber: user.idNumber || user.matricNumber || user.staffId,
+      applicantDepartment: user.department,
       ...data,
     });
 
-    revalidatePath(`/${session.role.toLowerCase()}/dashboard`);
-    revalidatePath(`/${session.role.toLowerCase()}/history`);
+    revalidatePath(`/${user.role.toLowerCase()}/dashboard`);
+    revalidatePath(`/${user.role.toLowerCase()}/history`);
 
     return { success: true, message: 'Leave application submitted successfully', data: JSON.parse(JSON.stringify(newLeave)) };
   } catch (error: any) {
@@ -30,11 +33,11 @@ export async function submitLeave(data: any) {
 
 export async function getUserLeaves() {
   try {
-    const session = await getSession();
-    if (!session) return { success: false, message: 'Unauthorized' };
+    const user = await getCoreUser();
+    if (!user) return { success: false, message: 'Unauthorized' };
 
     await dbConnect();
-    const leaves = await LeaveApplication.find({ userId: session._id }).sort({ createdAt: -1 }).lean();
+    const leaves = await LeaveApplication.find({ userId: user.id || user._id }).sort({ createdAt: -1 }).lean();
     return { success: true, data: JSON.parse(JSON.stringify(leaves)) };
   } catch (error: any) {
     return { success: false, message: error.message };
@@ -43,11 +46,11 @@ export async function getUserLeaves() {
 
 export async function getAllLeaves() {
   try {
-    const session = await getSession();
-    if (!session || session.role !== 'OFFICIAL') return { success: false, message: 'Unauthorized' };
+    const user = await getCoreUser();
+    if (!user || user.role !== 'OFFICIAL') return { success: false, message: 'Unauthorized' };
 
     await dbConnect();
-    const leaves = await LeaveApplication.find().populate('userId', 'name idNumber department faculty').sort({ createdAt: -1 }).lean();
+    const leaves = await LeaveApplication.find().sort({ createdAt: -1 }).lean();
     return { success: true, data: JSON.parse(JSON.stringify(leaves)) };
   } catch (error: any) {
     return { success: false, message: error.message };
@@ -56,8 +59,8 @@ export async function getAllLeaves() {
 
 export async function updateLeaveStatus(leaveId: string, status: string) {
   try {
-    const session = await getSession();
-    if (!session || session.role !== 'OFFICIAL') return { success: false, message: 'Unauthorized' };
+    const user = await getCoreUser();
+    if (!user || user.role !== 'OFFICIAL') return { success: false, message: 'Unauthorized' };
 
     await dbConnect();
     await LeaveApplication.findByIdAndUpdate(leaveId, { status });

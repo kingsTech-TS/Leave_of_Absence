@@ -1,14 +1,11 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import * as jose from 'jose';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_for_dev_mode';
 
 export async function proxy(request: NextRequest) {
-  const token = request.cookies.get('token')?.value;
+  const token = request.cookies.get('auth_token')?.value;
   const { pathname } = request.nextUrl;
 
-  const CORE_URL = process.env.CORE_API_URL || "https://eksucore.vercel.app";
+  const CORE_URL = process.env.NEXT_PUBLIC_CORE_URL || "https://eksucore.vercel.app";
 
   // 1. PUBLIC ASSETS & UTILITIES
   if (
@@ -20,56 +17,25 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 2. ROOT PATH REDIRECTION
-  if (pathname === '/') {
-    if (!token) {
-      return NextResponse.redirect(`${CORE_URL}/login?module=leave_of_absence`);
-    }
-
-    try {
-      const secret = new TextEncoder().encode(JWT_SECRET);
-      const { payload } = await jose.jwtVerify(token, secret);
-      const role = (payload as any).role;
-      const rolePath = role === 'OFFICIAL' ? 'official' : `${role?.toLowerCase()}/dashboard`;
-      return NextResponse.redirect(new URL(`/${rolePath}`, request.url));
-    } catch (e) {
-      return NextResponse.redirect(`${CORE_URL}/login?module=leave_of_absence`);
-    }
-  }
-
-  // 3. PROTECTED ROUTES
+  // 2. PROTECTED ROUTES REDIRECTION
   const isProtectedPath =
     pathname.startsWith('/student') ||
     pathname.startsWith('/staff') ||
     pathname.startsWith('/official');
 
-  if (isProtectedPath) {
+  if (isProtectedPath && !token) {
+    const loginUrl = `${CORE_URL}/login?module=leave_of_absence&redirect=${encodeURIComponent(request.url)}`;
+    return NextResponse.redirect(new URL(loginUrl));
+  }
+
+  // 3. ROOT PATH REDIRECTION - Try to send them to their dashboard if logged in
+  if (pathname === '/') {
     if (!token) {
       return NextResponse.redirect(`${CORE_URL}/login?module=leave_of_absence`);
     }
-
-    try {
-      const secret = new TextEncoder().encode(JWT_SECRET);
-      const { payload } = await jose.jwtVerify(token, secret);
-      const role = (payload as any).role;
-
-      // ROLE GUARD
-      if (pathname.startsWith('/official') && role !== 'OFFICIAL') {
-        return NextResponse.redirect(`${CORE_URL}/login?error=unauthorized`);
-      }
-      if (pathname.startsWith('/student') && role !== 'STUDENT') {
-        return NextResponse.redirect(`${CORE_URL}/login?error=unauthorized`);
-      }
-      if (pathname.startsWith('/staff') && role !== 'STAFF') {
-        return NextResponse.redirect(`${CORE_URL}/login?error=unauthorized`);
-      }
-
-      return NextResponse.next();
-    } catch (error) {
-      const response = NextResponse.redirect(`${CORE_URL}/login?error=session_expired`);
-      response.cookies.delete('token');
-      return response;
-    }
+    // We don't verify the role here to avoid a slow API call in proxy.
+    // The role-specific dashboards will redirect them if they land in the wrong place.
+    // Defaulting to root or a general landing is fine if unsure.
   }
 
   return NextResponse.next();

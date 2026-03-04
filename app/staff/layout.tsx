@@ -1,5 +1,5 @@
 import { Sidebar, Navbar } from "@/components/layout/DashboardLayout";
-import { getSession } from "@/lib/auth";
+import { getCoreUser } from "@/lib/core-user";
 import { redirect } from "next/navigation";
 
 export default async function StaffLayout({
@@ -7,7 +7,7 @@ export default async function StaffLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getSession();
+  const session = await getCoreUser();
 
   if (!session || session.role !== "STAFF") {
     const CORE_URL = process.env.CORE_API_URL || "https://eksucore.vercel.app";

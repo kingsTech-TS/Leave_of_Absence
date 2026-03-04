@@ -1,8 +1,8 @@
-import { getSession } from "@/lib/auth";
+import { getCoreUser } from "@/lib/core-user";
 import Profile from "@/components/ui/Profile";
 
 export default async function OfficialProfilePage() {
-  const session = await getSession();
+  const session = await getCoreUser();
 
   return <Profile user={session} />;
 }

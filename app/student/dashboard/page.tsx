@@ -1,4 +1,4 @@
-import { getSession } from "@/lib/auth";
+import { getCoreUser } from "@/lib/core-user";
 import { LeaveForm } from "@/components/forms/LeaveForm";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { getUserLeaves } from "@/lib/actions/leave";
@@ -16,7 +16,20 @@ import { FileText, Plus, Clock, CheckCircle, XCircle } from "lucide-react";
 import Link from "next/link";
 
 export default async function StudentDashboard() {
-  const session = await getSession();
+  const session = await getCoreUser();
+  if (!session || session.role !== "STUDENT") {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
+        <h2 className="text-xl font-bold">Unauthorized</h2>
+        <p className="text-slate-500">
+          Please log in as a student to access this dashboard.
+        </p>
+        <Link href="/">
+          <Badge className="cursor-pointer">Go back</Badge>
+        </Link>
+      </div>
+    );
+  }
   const { data: leaves = [] } = await getUserLeaves();
 
   const stats = [

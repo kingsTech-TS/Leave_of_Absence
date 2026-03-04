@@ -42,7 +42,7 @@ export default function OfficialDashboardClient() {
 
   const filteredLeaves = leaves.filter(
     (l) =>
-      l.userId?.name?.toLowerCase().includes(filter.toLowerCase()) ||
+      l.applicantName?.toLowerCase().includes(filter.toLowerCase()) ||
       l.leaveType?.toLowerCase().includes(filter.toLowerCase()),
   );
 
@@ -105,9 +105,9 @@ export default function OfficialDashboardClient() {
                 filteredLeaves.map((leave: any) => (
                   <TableRow key={leave._id}>
                     <TableCell>
-                      <div className="font-medium">{leave.userId?.name}</div>
+                      <div className="font-medium">{leave.applicantName}</div>
                       <div className="text-xs text-slate-500">
-                        {leave.userId?.idNumber}
+                        {leave.applicantIdNumber}
                       </div>
                     </TableCell>
                     <TableCell className="capitalize">

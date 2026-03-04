@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import dbConnect from "@/lib/mongodb";
-import User from "@/lib/models/User";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -16,7 +14,7 @@ export async function GET(request: NextRequest) {
 
   if (!CORE_API_URL || !CORE_SYSTEM_SECRET) {
     console.error("Missing CORE_API_URL or CORE_SYSTEM_SECRET environment variables.");
-    return NextResponse.redirect(`https://eksucore.vercel.app/login?error=system_config_error`);
+    return NextResponse.redirect(`${CORE_API_URL || 'https://eksucore.vercel.app'}/login?error=system_config_error`);
   }
 
   try {
@@ -32,47 +30,31 @@ export async function GET(request: NextRequest) {
     });
 
     if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        console.error("Verification failed:", errData);
+      const errData = await response.json().catch(() => ({}));
+      console.error("Verification failed:", errData);
       return NextResponse.redirect(`${CORE_API_URL}/login?error=verification_failed`);
     }
 
     const { user, token } = await response.json();
 
-    // Sync user with local database
-    await dbConnect();
-    // Use upsert to create or update the local user record
-    await User.findOneAndUpdate(
-      { email: user.email },
-      {
-        $set: {
-          idNumber: user.idNumber,
-          name: user.name,
-          department: user.department || "Academic",
-          faculty: user.faculty || "University",
-          role: user.role,
-          staffCategory: user.staffCategory || null,
-          // Set a dummy password for external users if it doesn't exist
-          password: user.password || "external_auth_no_password",
-        },
-      },
-      { upsert: true, new: true }
-    );
-
-    // Set the auth cookie
+    // Set the auth_token cookie
     const cookieStore = await cookies();
-    cookieStore.set("token", token, {
+    cookieStore.set("auth_token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       maxAge: 60 * 60 * 24, // 1 day
       path: "/",
+      sameSite: "lax",
     });
 
     // Redirect based on role
     const rolePath = user.role.toLowerCase();
+    
+    // Core users usually have roles like STUDENT, STAFF, OFFICIAL
     if (user.role === "OFFICIAL") {
         return NextResponse.redirect(new URL("/official", request.url));
     }
+    
     return NextResponse.redirect(new URL(`/${rolePath}/dashboard`, request.url));
 
   } catch (error) {

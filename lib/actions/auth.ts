@@ -61,6 +61,7 @@ async function authenticateUser(user: any): Promise<LoginResponse> {
 
 export async function logoutUser() {
   const cookieStore = await cookies();
-  cookieStore.delete('token');
+  cookieStore.delete('auth_token');
+  cookieStore.delete('token'); // Cleanup old token if exists
   return { success: true };
 }

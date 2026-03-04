@@ -1,4 +1,4 @@
-import { getSession } from "@/lib/auth";
+import { getCoreUser } from "@/lib/core-user";
 import { Sidebar, Navbar } from "@/components/layout/DashboardLayout";
 import { redirect } from "next/navigation";
 
@@ -7,7 +7,7 @@ export default async function OfficialLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getSession();
+  const session = await getCoreUser();
 
   if (!session || session.role !== "OFFICIAL") {
     const CORE_URL = process.env.CORE_API_URL || "https://eksucore.vercel.app";
