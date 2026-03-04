@@ -36,39 +36,18 @@ export async function getCoreUser(): Promise<CoreUser | null> {
   const token = cookieStore.get("token")?.value;
 
   if (!token) {
-    console.log("[getCoreUser] No 'token' found in cookies");
+    console.log("[getCoreUser] No 'token' cookie found");
     return null;
   }
 
-  // 1. First, try to get user data from the token itself for speed/availability
+  // Rely solely on the decoded JWT payload as requested
   const decoded = decodeJWT(token);
-  let userData = decoded?.user || decoded;
-
-  const CORE_API_URL = process.env.CORE_API_URL || "https://eksucore.vercel.app";
-
-  // 2. Then, validate against the server and get fresh data
-  try {
-    const response = await fetch(`${CORE_API_URL}/api/users/me`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      cache: "no-store",
-    });
-
-    if (response.ok) {
-      const serverData = await response.json();
-      userData = serverData.user || serverData;
-      console.log("[getCoreUser] Fresh user data fetched successfully");
-    } else {
-      console.warn(`[getCoreUser] Server check non-OK: ${response.status}. Using decoded data if any.`);
-      if (!userData) return null;
-    }
-  } catch (error) {
-    console.error("[getCoreUser] Network error fetching fresh data. Using decoded data if any.");
-    if (!userData) return null;
+  if (!decoded) {
+    console.warn("[getCoreUser] Could not decode JWT token");
+    return null;
   }
 
+  const userData = decoded.user || decoded;
   const coreId = userData.id || userData._id;
   const idNumber = userData.matricNumber || userData.staffId || userData.idNumber || userData.matricNo || userData.registrationNumber;
 
