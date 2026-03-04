@@ -30,12 +30,15 @@ export function decodeJWT(token: string) {
       base64 += "=";
     }
 
-    const decoded = JSON.parse(
-      Buffer.from(base64, "base64").toString("utf-8")
-    );
-    return decoded;
+    const decodedString = Buffer.from(base64, "base64").toString("utf-8");
+    try {
+      return JSON.parse(decodedString);
+    } catch (parseError) {
+      console.error("[decodeJWT] JSON.parse failed. Raw payload:", decodedString);
+      return null;
+    }
   } catch (error) {
-    console.error("[decodeJWT] Error decoding token:", error);
+    console.error("[decodeJWT] Critical error during decoding:", error);
     return null;
   }
 }

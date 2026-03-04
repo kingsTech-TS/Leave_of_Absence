@@ -2,16 +2,25 @@ import { getCoreUser } from "@/lib/core-user";
 import { redirect } from "next/navigation";
 import { cookies, headers } from "next/headers";
 
-export default async function RootPage() {
-  console.log("[RootPage] Checking core session...");
-  const cookieStore = await cookies();
-  const allCookies = cookieStore
-    .getAll()
-    .map((c) => c.name)
-    .join(", ");
-  console.log(`[RootPage] Visible cookies: ${allCookies || "none"}`);
+export const dynamic = "force-dynamic";
 
+export default async function RootPage() {
+  const headersList = await headers();
+  const host = headersList.get("host") || "localhost:3000";
+  const proto = headersList.get("x-forwarded-proto") || "http";
+  const cookieHeader = headersList.get("cookie") || "absent";
+
+  console.log(
+    `[RootPage] Init | Host: ${host} | Proto: ${proto} | Cookie Header: ${cookieHeader !== "absent" ? "present" : "missing"}`,
+  );
+
+  const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
+
+  console.log(
+    `[RootPage] Token cookie state: ${token ? "Found (" + token.substring(0, 5) + "...)" : "Not Found"}`,
+  );
+
   const user = token ? await getCoreUser(token) : null;
 
   if (user) {
@@ -27,9 +36,6 @@ export default async function RootPage() {
 
   console.log("[RootPage] No user session. Redirecting to Core login...");
   const CORE_URL = process.env.CORE_API_URL || "https://eksucore.vercel.app";
-  const headersList = await headers();
-  const host = headersList.get("host") || "localhost:3000";
-  const proto = headersList.get("x-forwarded-proto") || "http";
   const currentUrl = `${proto}://${host}/`;
 
   redirect(
