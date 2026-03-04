@@ -39,31 +39,37 @@ export async function GET(request: NextRequest) {
     const { user, token } = responseData;
 
     if (!token) {
-        console.error("[Callback] No token returned from verification");
+        console.error("[Callback] No token returned from verify-session. Keys:", Object.keys(responseData));
         return NextResponse.redirect(`${CORE_API_URL}/login?error=no_token_from_core`);
     }
 
+    console.log(`[Callback] Verification OK. Token length: ${token.length}. First 10: ${token.substring(0, 10)}...`);
+
     // Redirect based on role
-    const normalizedRole = user.role?.toUpperCase();
+    const normalizedRole = user.role?.toUpperCase() || "STUDENT";
     const rolePath = normalizedRole.toLowerCase();
     
-    let dashboardUrl: URL;
-    if (normalizedRole === "OFFICIAL") {
-        dashboardUrl = new URL("/official", request.url);
-    } else {
-        dashboardUrl = new URL(`/${rolePath}/dashboard`, request.url);
-    }
+    // Build the absolute URL for redirect
+    const dashboardUrl = new URL(normalizedRole === "OFFICIAL" ? "/official" : `/${rolePath}/dashboard`, request.url);
 
-    console.log(`[Callback] Verification OK. Role: ${normalizedRole}. Setting auth_token and redirecting to: ${dashboardUrl.toString()}`);
+    console.log(`[Callback] Setting auth_token cookie and redirecting to: ${dashboardUrl.toString()}`);
 
-    // Create redirect response
+    // Set cookie using next/headers (for server context)
+    const cookieStore = await cookies();
+    cookieStore.set("auth_token", token, {
+      httpOnly: true,
+      secure: true, // Force secure for Vercel
+      maxAge: 60 * 60 * 24,
+      path: "/",
+      sameSite: "lax",
+    });
+
+    // Also set it on the response for immediate effect in some environments
     const redirectResponse = NextResponse.redirect(dashboardUrl);
-    
-    // Set the auth_token cookie on the response object
     redirectResponse.cookies.set("auth_token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 60 * 60 * 24, // 1 day
+      secure: true,
+      maxAge: 60 * 60 * 24,
       path: "/",
       sameSite: "lax",
     });
