@@ -2,15 +2,17 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export async function proxy(request: NextRequest) {
+  console.log(`[Proxy] Init: ${request.nextUrl.pathname}`);
   const allCookies = request.cookies.getAll();
   const cookieNames = allCookies.map(c => c.name).join(', ');
   const token = request.cookies.get('token')?.value;
   const { pathname } = request.nextUrl;
   const host = request.headers.get('host');
+  const proto = request.headers.get('x-forwarded-proto') || request.nextUrl.protocol;
 
   const CORE_URL = process.env.CORE_API_URL || "https://eksucore.vercel.app";
 
-  console.log(`[Proxy] Request: ${pathname} | Host: ${host} | Cookies: ${cookieNames || 'none'}`);
+  console.log(`[Proxy] Request: ${pathname} | Host: ${host} | Proto: ${proto} | Cookies: ${cookieNames || 'none'}`);
 
   // 1. PUBLIC ASSETS & UTILITIES (Direct bypass)
   if (
@@ -45,5 +47,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };

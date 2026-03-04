@@ -79,9 +79,13 @@ export async function GET(request: NextRequest) {
     }
 
     const dashboardUrl = new URL(dashboardPath, request.url);
-    const isSecure = request.nextUrl.protocol === "https:";
+    const host = request.headers.get("host") || "";
+    const xProto = request.headers.get("x-forwarded-proto");
+    const isLocalhost = host.includes("localhost") || host.includes("127.0.0.1");
+    const isSecure = isLocalhost ? false : (xProto === "https" || request.nextUrl.protocol === "https:");
 
-    console.log(`[Callback] Redirecting ${role} to: ${dashboardUrl.toString()}`);
+    console.log(`[Callback] Domain: ${host} | Proto: ${xProto || request.nextUrl.protocol} | Secure: ${isSecure}`);
+    console.log(`[Callback] Final Redirect URL: ${dashboardUrl.toString()}`);
 
     // 🔹 Create redirect response
     const redirectResponse = NextResponse.redirect(dashboardUrl);
@@ -94,20 +98,6 @@ export async function GET(request: NextRequest) {
       path: "/",
       sameSite: "lax",
     });
-
-    // Also try setting it via the cookies() API for immediate server-side visibility if possible
-    try {
-        const cookieStore = await cookies();
-        cookieStore.set("token", token, {
-          httpOnly: true,
-          secure: isSecure,
-          maxAge: 60 * 60 * 24,
-          path: "/",
-          sameSite: "lax",
-        });
-    } catch (e) {
-        // Fallback for environments where cookies() might not be writable in this context
-    }
 
     return redirectResponse;
   } catch (error) {
