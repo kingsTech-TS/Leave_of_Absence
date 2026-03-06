@@ -9,7 +9,7 @@ import { cookies } from 'next/headers';
 export async function submitLeave(data: any) {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get('token')?.value;
+    const token = cookieStore.get('auth_token')?.value;
     const user = token ? await getCoreUser(token) : null;
     if (!user) {
       return { success: false, message: 'Unauthorized' };
@@ -37,7 +37,7 @@ export async function submitLeave(data: any) {
 export async function getUserLeaves() {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get('token')?.value;
+    const token = cookieStore.get('auth_token')?.value;
     const user = token ? await getCoreUser(token) : null;
     if (!user) return { success: false, message: 'Unauthorized' };
 
@@ -52,7 +52,7 @@ export async function getUserLeaves() {
 export async function getAllLeaves() {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get('token')?.value;
+    const token = cookieStore.get('auth_token')?.value;
     const user = token ? await getCoreUser(token) : null;
     if (!user || user.role !== 'OFFICIAL') return { success: false, message: 'Unauthorized' };
 
@@ -67,7 +67,7 @@ export async function getAllLeaves() {
 export async function updateLeaveStatus(leaveId: string, status: string) {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get('token')?.value;
+    const token = cookieStore.get('auth_token')?.value;
     const user = token ? await getCoreUser(token) : null;
     if (!user || user.role !== 'OFFICIAL') return { success: false, message: 'Unauthorized' };
 

@@ -15,67 +15,72 @@ export interface CoreUser {
   staffCategory?: StaffCategory;
 }
 
-export function decodeJWT(token: string) {
+/**
+ * Decodes a JWT payload without verifying the signature.
+ * Used only for extracting role/claims after the Core API has already verified the token.
+ */
+export function decodeJWT(token: string): Record<string, any> | null {
   try {
     const parts = token.split(".");
-    if (parts.length !== 3) {
-      console.warn("[decodeJWT] Invalid token format (expected 3 parts)");
-      return null;
-    }
-    
-    const payloadBase64 = parts[1];
-    // Convert base64url → base64 and add padding
-    let base64 = payloadBase64.replace(/-/g, "+").replace(/_/g, "/");
-    while (base64.length % 4) {
-      base64 += "=";
-    }
-
-    const decodedString = Buffer.from(base64, "base64").toString("utf-8");
-    try {
-      return JSON.parse(decodedString);
-    } catch (parseError) {
-      console.error("[decodeJWT] JSON.parse failed. Raw payload:", decodedString);
-      return null;
-    }
-  } catch (error) {
-    console.error("[decodeJWT] Critical error during decoding:", error);
+    if (parts.length !== 3) return null;
+    // Base64url → Base64 → JSON
+    const payload = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const decoded = Buffer.from(payload, "base64").toString("utf-8");
+    return JSON.parse(decoded);
+  } catch {
     return null;
   }
 }
 
 export async function getCoreUser(providedToken?: string): Promise<CoreUser | null> {
   let token = providedToken;
+
   if (!token) {
-    const cookieStore = await cookies();
-    token = cookieStore.get("token")?.value;
+    const cookieStore = await cookies(); // ✅ await required in Next.js 15+
+    token = cookieStore.get("auth_token")?.value;
   }
 
   if (!token) {
-    console.log("[getCoreUser] No 'token' cookie found");
-    return null;
-  }
-  
-  const userDataPayload = decodeJWT(token);
-  if (!userDataPayload) {
-    console.error("[getCoreUser] Token found but decoding failed");
+    console.log("[getCoreUser] No auth_token found");
     return null;
   }
 
-  const userData = userDataPayload.user || userDataPayload;
-  const coreId = userData.id || userData._id;
-  const idNumber =
-    userData.matricNumber ||
-    userData.staffId ||
-    userData.idNumber ||
-    userData.matricNo ||
-    userData.registrationNumber ||
-    userData.registrationNo;
+  try {
+    const res = await fetch(
+      `${process.env.CORE_API_URL}/api/users/me`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        cache: "no-store",
+      }
+    );
 
-  return {
-    ...userData,
-    id: coreId,
-    _id: coreId,
-    idNumber: idNumber,
-    role: (userData.role || "STUDENT").toUpperCase(),
-  };
+    if (!res.ok) {
+      console.warn("[getCoreUser] Core rejected token");
+      return null;
+    }
+
+    const userData = await res.json();
+
+    const coreId = userData.id || userData._id;
+
+    const idNumber =
+      userData.matricNumber ||
+      userData.staffId ||
+      userData.idNumber ||
+      userData.matricNo ||
+      userData.registrationNumber;
+
+    return {
+      ...userData,
+      id: coreId,
+      _id: coreId,
+      idNumber,
+      role: (userData.role || "STUDENT").toUpperCase(),
+    };
+  } catch (error) {
+    console.error("[getCoreUser] Error contacting Core:", error);
+    return null;
+  }
 }

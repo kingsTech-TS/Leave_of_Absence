@@ -1,51 +1,52 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-export async function proxy(request: NextRequest) {
-  console.log(`[Proxy] Init: ${request.nextUrl.pathname}`);
-  const allCookies = request.cookies.getAll();
-  const cookieNames = allCookies.map(c => c.name).join(', ');
-  const token = request.cookies.get('token')?.value;
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const host = request.headers.get('host');
-  const proto = request.headers.get('x-forwarded-proto') || request.nextUrl.protocol;
 
-  const CORE_URL = process.env.CORE_API_URL || "https://eksucore.vercel.app";
+  const token = request.cookies.get("auth_token")?.value;
 
-  console.log(`[Proxy] Request: ${pathname} | Host: ${host} | Proto: ${proto} | Cookies: ${cookieNames || 'none'}`);
+  const CORE_URL =
+    process.env.CORE_API_URL || "https://eksucore.vercel.app";
 
-  // 1. PUBLIC ASSETS & UTILITIES (Direct bypass)
+  console.log(
+    `[Proxy] Path: ${pathname} | Auth: ${token ? "present" : "missing"}`
+  );
+
+  // Allow public assets
   if (
-    pathname.includes('.') ||
-    pathname.startsWith('/_next') ||
-    pathname.startsWith('/api/auth') ||
-    pathname === '/favicon.ico'
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/api/auth") ||
+    pathname === "/favicon.ico" ||
+    pathname.includes(".")
   ) {
     return NextResponse.next();
   }
 
-  // Debug for internal paths
-  if (!token) {
-     const rawCookie = request.headers.get('cookie');
-     console.log(`[Proxy] [Debug] No 'token' cookie for ${pathname}. Raw Cookie: ${rawCookie ? 'present (omitted)' : 'absent'}`);
-  }
+  const protectedRoutes = [
+    "/student",
+    "/staff",
+    "/official",
+    "/admin",
+  ];
 
-  // 2. PROTECTED ROUTES REDIRECTION
-  const isProtectedPath =
-    pathname.startsWith('/student') ||
-    pathname.startsWith('/staff') ||
-    pathname.startsWith('/official');
+  const isProtected = protectedRoutes.some((route) =>
+    pathname.startsWith(route)
+  );
 
-  if (isProtectedPath && !token) {
-    console.log(`[Proxy] AUTH REQUIRED: Redirecting ${pathname} to Core login.`);
-    const loginUrl = `${CORE_URL}/login?module=leave_of_absence&redirect=${encodeURIComponent(request.url)}`;
+  if (isProtected && !token) {
+    console.log(`[Proxy] Redirecting to Core login`);
+
+    const loginUrl = `${CORE_URL}/login?module=leave_of_absence&redirect=${encodeURIComponent(
+      request.url
+    )}`;
+
     return NextResponse.redirect(loginUrl);
   }
 
-  // Let all other paths (including '/') through to the App Router
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };

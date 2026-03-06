@@ -19,7 +19,7 @@ export async function loginUser(data: any): Promise<LoginResponse> {
 
 export async function logoutUser() {
   const cookieStore = await cookies();
-  cookieStore.delete('token');
-  cookieStore.delete('auth_token'); // Cleanup legacy name if present
+  cookieStore.delete('auth_token'); // Primary cookie set by the Core callback
+  cookieStore.delete('token');       // Legacy fallback cleanup
   return { success: true };
 }

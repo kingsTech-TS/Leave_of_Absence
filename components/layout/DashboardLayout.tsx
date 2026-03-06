@@ -113,7 +113,8 @@ function LogoutButton() {
   const handleLogout = () => {
     startTransition(async () => {
       await logoutUser();
-      const CORE_URL = "https://eksucore.vercel.app";
+      const CORE_URL =
+        process.env.NEXT_PUBLIC_CORE_URL || "https://eksucore.vercel.app";
       window.location.href = `${CORE_URL}/login?module=leave_of_absence`;
     });
   };

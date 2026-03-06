@@ -9,7 +9,7 @@ export default async function OfficialLayout({
   children: React.ReactNode;
 }) {
   const cookieStore = await cookies();
-  const token = cookieStore.get("token")?.value;
+  const token = cookieStore.get("auth_token")?.value;
   const session = token ? await getCoreUser(token) : null;
 
   if (!session || session.role !== "OFFICIAL") {
