@@ -129,7 +129,7 @@ export default function LeaveHistory({
                               ? "danger"
                               : active.currentStage === "HOD_APPROVAL"
                                 ? "warning"
-                                : "outline"
+                                : "default"
                         }
                         className="text-[9px] px-1.5 h-4"
                       >
@@ -189,7 +189,7 @@ export default function LeaveHistory({
                               ? "danger"
                               : active.currentStage === "DEAN_APPROVAL"
                                 ? "warning"
-                                : "outline"
+                                : "default"
                         }
                         className="text-[9px] px-1.5 h-4"
                       >
@@ -249,7 +249,7 @@ export default function LeaveHistory({
                               ? "danger"
                               : active.currentStage === "VC_APPROVAL"
                                 ? "warning"
-                                : "outline"
+                                : "default"
                         }
                         className="text-[9px] px-1.5 h-4"
                       >
@@ -331,7 +331,7 @@ export default function LeaveHistory({
                               : leave.hodApproval?.status === "REJECTED"
                                 ? "danger"
                                 : leave.hodApproval?.status === "N/A"
-                                  ? "outline"
+                                  ? "default"
                                   : "warning"
                           }
                           className={`text-[9px] px-1.5 py-0 h-5 ${leave.hodApproval?.status === "N/A" ? "opacity-40" : ""}`}
@@ -346,7 +346,7 @@ export default function LeaveHistory({
                               : leave.deanApproval?.status === "REJECTED"
                                 ? "danger"
                                 : leave.deanApproval?.status === "N/A"
-                                  ? "outline"
+                                  ? "default"
                                   : "warning"
                           }
                           className={`text-[9px] px-1.5 py-0 h-5 ${leave.deanApproval?.status === "N/A" ? "opacity-40" : ""}`}
