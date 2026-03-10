@@ -138,10 +138,10 @@ export default function OfficialDashboardClient({ user }: { user: any }) {
                   Quick Access
                 </p>
                 <div className="mt-3 flex gap-2">
-                  <Badge variant="outline" className="text-[10px]">
+                  <Badge variant="default" className="text-[10px]">
                     {user?.role}
                   </Badge>
-                  <Badge variant="outline" className="text-[10px]">
+                  <Badge variant="default" className="text-[10px]">
                     {user?.department || "University"}
                   </Badge>
                 </div>
