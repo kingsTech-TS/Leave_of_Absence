@@ -104,7 +104,7 @@ export default function ProcessedHistory({ user }: { user: any }) {
                       </TableCell>
                       <TableCell>
                         <Badge
-                          variant="outline"
+                          variant="default"
                           className="capitalize text-[10px]"
                         >
                           {leave.leaveType?.replace(/_/g, " ") || "N/A"}
