@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from "../ui/Card";
 import { Button } from "../ui/Button";
-import { Download, FileText, Printer } from "lucide-react";
+import { Download, Printer } from "lucide-react";
 import { format } from "date-fns";
 
 interface LetterPreviewProps {
@@ -61,7 +61,23 @@ export function LeaveLetterPreview({ user, leaveData }: LetterPreviewProps) {
           <p>
             <strong>To:</strong>
           </p>
-          <p>The Dean/Head of Department,</p>
+          <p>Head of Department,</p>
+          <p>University of Excellence.</p>
+        </div>
+
+        <div className="mb-10 text-sm font-serif">
+          <p>
+            <strong>To:</strong>
+          </p>
+          <p>The Dean of Faculty,</p>
+          <p>University of Excellence.</p>
+        </div>
+
+        <div className="mb-10 text-sm font-serif">
+          <p>
+            <strong>To:</strong>
+          </p>
+          <p>The Vice Chancellor,</p>
           <p>University of Excellence.</p>
         </div>
 

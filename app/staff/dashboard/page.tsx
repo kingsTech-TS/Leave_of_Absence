@@ -105,7 +105,7 @@ export default async function StaffDashboard() {
                 {leaves.slice(0, 8).map((leave: any) => (
                   <TableRow key={leave._id}>
                     <TableCell className="font-medium capitalize">
-                      {leave.leaveType.replace(/_/g, " ")}
+                      {leave.leaveType?.replace(/_/g, " ") || "N/A"}
                     </TableCell>
                     <TableCell className="text-xs">
                       {format(new Date(leave.startDate), "MMM dd")} -{" "}

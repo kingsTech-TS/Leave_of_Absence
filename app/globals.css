@@ -2,8 +2,17 @@
 
 :root {
   --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
+  --background-start-rgb: 248, 250, 252;
   --background-end-rgb: 255, 255, 255;
+
+  /* Official Brand Palette */
+  --brand-primary: #7b113a; /* Deep Maroon */
+  --brand-deep: #150e56; /* Deep Midnight */
+  --brand-vibrant: #1597bb; /* Tertiary Blue */
+  --brand-light: #8fd6e1; /* Light Sky Aqua */
+
+  /* Shadcn-like mapping (custom) */
+  --primary: 123 17 58; /* #7B113A in RGB */
 }
 
 body {

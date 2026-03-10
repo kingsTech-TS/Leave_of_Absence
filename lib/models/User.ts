@@ -10,6 +10,7 @@ const UserSchema = new mongoose.Schema(
     department: { type: String, required: true },
     faculty: { type: String, required: true },
     role: { type: String, enum: ['STAFF', 'STUDENT', 'OFFICIAL'], required: true },
+    officialLevel: { type: String, enum: ['HOD', 'DEAN', 'VC', null], default: null },
     staffCategory: { type: String, enum: ['ACADEMIC', 'NON_ACADEMIC', null], default: null },
   },
   { timestamps: true }

@@ -1,4 +1,5 @@
 export type Role = "STAFF" | "STUDENT" | "OFFICIAL";
+export type OfficialLevel = "HOD" | "DEAN" | "VC" | null;
 export type StaffCategory = "ACADEMIC" | "NON_ACADEMIC" | null;
 
 export interface User {
@@ -9,26 +10,38 @@ export interface User {
   department: string;
   faculty: string;
   role: Role;
+  officialLevel?: OfficialLevel;
   staffCategory?: StaffCategory;
   createdAt: string;
 }
 
 export type LeaveStatus = "PENDING" | "APPROVED" | "REJECTED";
+export type LeaveStage = "HOD_APPROVAL" | "DEAN_APPROVAL" | "VC_APPROVAL" | "COMPLETED" | "REJECTED";
 
-export interface LeaveType {
-  id: string;
-  label: string;
+export interface ApprovalStep {
+  status: LeaveStatus;
+  comment?: string;
+  officialName?: string;
+  updatedAt?: string;
 }
 
 export interface LeaveApplication {
   _id: string;
   userId: string | User;
+  applicantName: string;
+  applicantDepartment: string;
+  applicantFaculty: string;
+  applicantIdNumber: string;
   leaveType: string;
   startDate: string;
   endDate: string;
   reason: string;
   academicSession?: string; // For students
-  status: LeaveStatus;
+  status: LeaveStatus; // Final overall status
+  currentStage: LeaveStage;
+  hodApproval: ApprovalStep;
+  deanApproval: ApprovalStep;
+  vcApproval: ApprovalStep;
   documentUrl?: string; // Optional document upload
   createdAt: string;
   updatedAt: string;
@@ -61,3 +74,8 @@ export const NON_ACADEMIC_STAFF_LEAVE_TYPES: LeaveType[] = [
 export type LoginResponse = 
   | { success: true; role: Role }
   | { success: false; message: string };
+
+export interface LeaveType {
+  id: string;
+  label: string;
+}

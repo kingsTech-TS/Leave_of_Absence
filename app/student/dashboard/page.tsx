@@ -131,6 +131,7 @@ export default async function StudentDashboard() {
                     <TableRow>
                       <TableHead>Leave Type</TableHead>
                       <TableHead>Start Date</TableHead>
+                      <TableHead>Current Stage</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="text-right">Action</TableHead>
                     </TableRow>
@@ -139,10 +140,18 @@ export default async function StudentDashboard() {
                     {leaves.slice(0, 5).map((leave: any) => (
                       <TableRow key={leave._id}>
                         <TableCell className="font-medium capitalize">
-                          {leave.leaveType.replace(/_/g, " ")}
+                          {leave.leaveType?.replace(/_/g, " ") || "N/A"}
                         </TableCell>
                         <TableCell>
                           {format(new Date(leave.startDate), "MMM dd, yyyy")}
+                        </TableCell>
+                        <TableCell>
+                          <Badge className="text-[10px] whitespace-nowrap bg-slate-50">
+                            {leave.currentStage === "COMPLETED"
+                              ? "VC (APPROVED)"
+                              : leave.currentStage?.replace(/_/g, " ") ||
+                                "STARTING"}
+                          </Badge>
                         </TableCell>
                         <TableCell>
                           <Badge

@@ -62,7 +62,9 @@ export default function Profile({ user }: ProfileProps) {
                 <div className="flex items-center space-x-2">
                   <MapPin className="h-4 w-4 text-blue-500" />
                   <p className="text-slate-900 font-medium">
-                    {user.faculty || "Not Specified"}
+                    {user.role === "OFFICIAL" && user.officialLevel === "VC"
+                      ? "N/A (University Wide)"
+                      : user.faculty || "Not Specified"}
                   </p>
                 </div>
               </div>
@@ -73,7 +75,9 @@ export default function Profile({ user }: ProfileProps) {
                 <div className="flex items-center space-x-2">
                   <Building className="h-4 w-4 text-blue-500" />
                   <p className="text-slate-900 font-medium">
-                    {user.department || "Not Specified"}
+                    {user.role === "OFFICIAL" && user.officialLevel === "VC"
+                      ? "N/A (University Wide)"
+                      : user.department || "Not Specified"}
                   </p>
                 </div>
               </div>
@@ -88,15 +92,26 @@ export default function Profile({ user }: ProfileProps) {
                   {user.role.toLowerCase()}
                 </Badge>
               </div>
-              {user.role === "STAFF" && (
+              {user.officialLevel && (
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                    Official Rank
+                  </p>
+                  <Badge className="bg-indigo-50 text-indigo-700">
+                    {user.officialLevel}
+                  </Badge>
+                </div>
+              )}
+              {(user.role === "STAFF" || user.role === "OFFICIAL") && (
                 <div className="space-y-1">
                   <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
                     Staff Category
                   </p>
                   <div className="flex items-center space-x-2">
                     <Briefcase className="h-4 w-4 text-emerald-500" />
-                    <p className="text-slate-900 font-medium">
-                      {user.staffCategory || "Not Specified"}
+                    <p className="text-slate-900 font-medium capitalize">
+                      {user.staffCategory?.toLowerCase()?.replace(/_/g, " ") ||
+                        "Not Specified"}
                     </p>
                   </div>
                 </div>

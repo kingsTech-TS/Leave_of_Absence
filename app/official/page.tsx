@@ -21,5 +21,5 @@ export default async function OfficialPage() {
       </div>
     );
   }
-  return <OfficialDashboardClient />;
+  return <OfficialDashboardClient user={session} />;
 }

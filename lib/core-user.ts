@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { StaffCategory } from "@/types";
+import { verifyToken } from "@/lib/auth";
 
 export interface CoreUser {
   id: string;
@@ -12,6 +13,7 @@ export interface CoreUser {
   matricNumber?: string;
   staffId?: string;
   idNumber?: string;
+  officialLevel?: string;
   staffCategory?: StaffCategory;
 }
 
@@ -45,42 +47,64 @@ export async function getCoreUser(providedToken?: string): Promise<CoreUser | nu
     return null;
   }
 
+  // 1️⃣ Try Core API first (for tokens issued by the Core Platform)
   try {
     const res = await fetch(
       `${process.env.CORE_API_URL}/api/users/me`,
       {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
         cache: "no-store",
+        signal: AbortSignal.timeout(5000), // Don't hang forever
       }
     );
 
-    if (!res.ok) {
-      console.warn("[getCoreUser] Core rejected token");
-      return null;
+    if (res.ok) {
+      const userData = await res.json();
+      const coreId = userData.id || userData._id;
+      const idNumber =
+        userData.matricNumber ||
+        userData.staffId ||
+        userData.idNumber ||
+        userData.matricNo ||
+        userData.registrationNumber;
+
+      const department = userData.department || userData.dept || userData.deptName;
+      const faculty = userData.faculty || userData.fac || userData.facultyName;
+
+      return {
+        ...userData,
+        id: coreId,
+        _id: coreId,
+        idNumber,
+        department,
+        faculty,
+        role: (userData.role || "STUDENT").toUpperCase(),
+      };
     }
+  } catch {
+    // Core is unreachable or timed out — fall through to local JWT
+  }
 
-    const userData = await res.json();
-
-    const coreId = userData.id || userData._id;
-
-    const idNumber =
-      userData.matricNumber ||
-      userData.staffId ||
-      userData.idNumber ||
-      userData.matricNo ||
-      userData.registrationNumber;
+  // 2️⃣ Fallback: decode local JWT (tokens issued by loginUser server action)
+  console.log("[getCoreUser] Core unavailable — decoding local JWT");
+  try {
+    const decoded = await verifyToken(token) as Record<string, any> | null;
+    if (!decoded) return null;
 
     return {
-      ...userData,
-      id: coreId,
-      _id: coreId,
-      idNumber,
-      role: (userData.role || "STUDENT").toUpperCase(),
+      id: decoded.id || decoded._id,
+      _id: decoded.id || decoded._id,
+      name: decoded.name,
+      email: decoded.email,
+      role: (decoded.role || "STUDENT").toUpperCase() as CoreUser["role"],
+      department: decoded.department,
+      faculty: decoded.faculty,
+      idNumber: decoded.idNumber,
+      officialLevel: decoded.officialLevel ?? null,
+      staffCategory: decoded.staffCategory ?? null,
     };
   } catch (error) {
-    console.error("[getCoreUser] Error contacting Core:", error);
+    console.error("[getCoreUser] Error decoding local JWT:", error);
     return null;
   }
 }

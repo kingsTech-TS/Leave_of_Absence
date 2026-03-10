@@ -71,7 +71,7 @@ export function LeaveForm({
 
   const leaveTypes = useMemo(() => {
     if (role === "STUDENT") return STUDENT_LEAVE_TYPES;
-    if (role === "STAFF") {
+    if (role === "STAFF" || role === "OFFICIAL") {
       if (selectedCategory === "ACADEMIC") return ACADEMIC_STAFF_LEAVE_TYPES;
       if (selectedCategory === "NON_ACADEMIC")
         return NON_ACADEMIC_STAFF_LEAVE_TYPES;
@@ -119,7 +119,7 @@ export function LeaveForm({
             </div>
           )}
 
-          {role === "STAFF" && (
+          {(role === "STAFF" || role === "OFFICIAL") && (
             <div className="space-y-2">
               <Label htmlFor="staffCategory">Staff Category</Label>
               <Select

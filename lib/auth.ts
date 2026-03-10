@@ -24,61 +24,23 @@ export async function getSession() {
   if (!token) return null;
 
   try {
-    // 1. Validate against the external Core Platform first as it's the source of truth
-    const CORE_URL = process.env.CORE_API_URL || "https://eksucore.vercel.app";
-    const coreProfileUrl = `${CORE_URL}/api/users/me`;
-    
-    // Add a timeout to the fetch to prevent hanging for 10s
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    const decoded = await verifyToken(token) as Record<string, any> | null;
+    if (!decoded) return null;
 
-    try {
-      const response = await fetch(coreProfileUrl, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        cache: 'no-store', // Always fresh "at the moment"
-        signal: controller.signal
-      });
-      clearTimeout(timeoutId);
-
-      if (response.ok) {
-        const data = await response.json();
-        // Handle both direct objects and { user: ... } nesting
-        const userData = data.user || data;
-        
-        return {
-          ...userData,
-          _id: userData._id || userData.id,
-          idNumber: userData.idNumber || userData.registrationNumber || userData.matricNo,
-          role: userData.role,
-          name: userData.name,
-          email: userData.email,
-          department: userData.department,
-          faculty: userData.faculty,
-          staffCategory: userData.staffCategory
-        };
-      }
-    } catch (fetchError) {
-      clearTimeout(timeoutId);
-      console.warn("External session validation failed or timed out.");
-    }
-
-    // 2. Fallback to local database
-    const decoded = await verifyToken(token) as { userId: string } | null;
-    if (!decoded || !decoded.userId) return null;
-
-    await dbConnect();
-    const user = await User.findById(decoded.userId).lean().exec();
-
-    if (!user) return null;
-
+    // The JWT payload contains the full user object (set in loginUser)
     return {
-      ...user,
-      _id: user._id.toString(),
+      _id: decoded.id || decoded._id,
+      id: decoded.id || decoded._id,
+      name: decoded.name,
+      email: decoded.email,
+      role: decoded.role,
+      department: decoded.department,
+      faculty: decoded.faculty,
+      idNumber: decoded.idNumber,
+      staffCategory: decoded.staffCategory ?? null,
     };
   } catch (error) {
-    console.error("Session verification error:", error);
+    console.error('Session verification error:', error);
     return null;
   }
 }

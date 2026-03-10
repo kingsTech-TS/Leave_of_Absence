@@ -6,41 +6,27 @@ export function proxy(request: NextRequest) {
 
   const token = request.cookies.get("auth_token")?.value;
 
-  const CORE_URL =
-    process.env.CORE_API_URL || "https://eksucore.vercel.app";
-
-  console.log(
-    `[Proxy] Path: ${pathname} | Auth: ${token ? "present" : "missing"}`
-  );
-
-  // Allow public assets
+  // 1️⃣ Always allow public paths
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/api/auth") ||
     pathname === "/favicon.ico" ||
+    pathname === "/login" ||
+    pathname === "/signup" ||
     pathname.includes(".")
   ) {
     return NextResponse.next();
   }
 
-  const protectedRoutes = [
-    "/student",
-    "/staff",
-    "/official",
-    "/admin",
-  ];
-
+  // 2️⃣ Protected dashboard routes
+  const protectedRoutes = ["/student", "/staff", "/official", "/admin"];
   const isProtected = protectedRoutes.some((route) =>
     pathname.startsWith(route)
   );
 
   if (isProtected && !token) {
-    console.log(`[Proxy] Redirecting to Core login`);
-
-    const loginUrl = `${CORE_URL}/login?module=leave_of_absence&redirect=${encodeURIComponent(
-      request.url
-    )}`;
-
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
